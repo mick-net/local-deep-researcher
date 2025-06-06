@@ -1,4 +1,5 @@
 import json
+import os
 
 from typing_extensions import Literal
 
@@ -12,6 +13,8 @@ from ollama_deep_researcher.utils import deduplicate_and_format_sources, tavily_
 from ollama_deep_researcher.state import SummaryState, SummaryStateInput, SummaryStateOutput
 from ollama_deep_researcher.prompts import query_writer_instructions, summarizer_instructions, reflection_instructions, get_current_date
 from ollama_deep_researcher.lmstudio import ChatLMStudio
+from langchain_openai import AzureChatOpenAI
+
 
 # Nodes
 def generate_query(state: SummaryState, config: RunnableConfig):
@@ -45,6 +48,18 @@ def generate_query(state: SummaryState, config: RunnableConfig):
             model=configurable.local_llm, 
             temperature=0, 
             format="json"
+        )
+    elif configurable.llm_provider == "azure":
+        llm_json_mode = AzureChatOpenAI(
+            max_tokens=None,
+            max_retries=3,
+            timeout=30,
+            azure_deployment=os.getenv("AZURE_CHAT_DEPLOYMENT_NAME_GPT_41_mini", "gpt-4.1-mini"),
+            # openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview"),
+            temperature=0.1,
+            api_key=os.getenv("AZURE_OPENAI_API_KEY_2", None),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT_2", None),
+            streaming=True,
         )
     else: # Default to Ollama
         llm_json_mode = ChatOllama(
@@ -155,6 +170,18 @@ def summarize_sources(state: SummaryState, config: RunnableConfig):
             model=configurable.local_llm, 
             temperature=0
         )
+    elif configurable.llm_provider == "azure":
+        llm = AzureChatOpenAI(
+            max_tokens=None,
+            max_retries=3,
+            timeout=30,
+            azure_deployment=os.getenv("AZURE_CHAT_DEPLOYMENT_NAME_GPT_41_mini", "gpt-4.1-mini"),
+            # openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview"),
+            temperature=0.1,
+            api_key=os.getenv("AZURE_OPENAI_API_KEY_2", None),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT_2", None),
+            streaming=True,
+        )
     else:  # Default to Ollama
         llm = ChatOllama(
             base_url=configurable.ollama_base_url, 
@@ -199,6 +226,18 @@ def reflect_on_summary(state: SummaryState, config: RunnableConfig):
             model=configurable.local_llm, 
             temperature=0, 
             format="json"
+        )
+    elif configurable.llm_provider == "azure":
+        llm_json_mode = AzureChatOpenAI(
+            max_tokens=None,
+            max_retries=3,
+            timeout=30,
+            azure_deployment=os.getenv("AZURE_CHAT_DEPLOYMENT_NAME_GPT_41_mini", "gpt-4.1-mini"),
+            # openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview"),
+            temperature=0.1,
+            api_key=os.getenv("AZURE_OPENAI_API_KEY_2", None),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT_2", None),
+            streaming=True,
         )
     else: # Default to Ollama
         llm_json_mode = ChatOllama(
